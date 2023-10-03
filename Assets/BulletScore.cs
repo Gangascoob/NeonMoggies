@@ -28,4 +28,14 @@ public class BulletScore : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    void OnCollisionStay(Collision other)
+    {
+        if (other.gameObject.CompareTag("Sign"))
+        {
+            controller.ScoreUp();
+            Debug.Log("score");
+            Destroy(gameObject);
+        }
+    }
 }
