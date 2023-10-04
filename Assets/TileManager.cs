@@ -8,14 +8,14 @@ public class TileManager : MonoBehaviour
     public List<float> tileWeights;
 
     public Transform player;
-    public float moveSpeed = 5.0f;
+    public float forceMagnitude = 100.0f; // The force magnitude applied to the tiles.
     public float tileLength = 5.0f; // Length of each tile.
     public int numTilesOnScreen = 20; // Number of tiles to keep on-screen.
     public float spawnInterval = 2.0f;
     private float deleteThreshold = -10.0f;
     public int maxActiveTiles = 20;
 
-    private List<GameObject> activeTiles = new List<GameObject>();
+    private List<Rigidbody> tileRigidbodies = new List<Rigidbody>();
     private float spawnZ = 0.0f;
     private float spawnTimer = 0.0f;
 
@@ -32,32 +32,31 @@ public class TileManager : MonoBehaviour
         MoveTiles();
 
         spawnTimer += Time.deltaTime;
-        if (spawnTimer >= spawnInterval && activeTiles.Count < maxActiveTiles)
+        if (spawnTimer >= spawnInterval && tileRigidbodies.Count < maxActiveTiles)
         {
             SpawnTile();
-            //DeleteTile();
+            // DeleteTile();
             spawnTimer = 0.0f;
         }
+
+        ApplyForceToTiles();
     }
 
     private void SpawnTile()
     {
-        /*
-        int randomIndex = Random.Range(0, tilePrefabs.Length);
-        GameObject tile = Instantiate(tilePrefabs[randomIndex], transform.forward * spawnZ, Quaternion.identity);
-        activeTiles.Add(tile);
-        spawnZ += tileLength;
-        */
-
-        
         int randomTileIndex = ChooseRandomTileType(); // Get the randomly chosen tile type.
-        GameObject tile = Instantiate(tilePrefabs[randomTileIndex], transform.forward * spawnZ, Quaternion.identity);
-        activeTiles.Add(tile);
+        GameObject tileObject = Instantiate(tilePrefabs[randomTileIndex], transform.forward * spawnZ, Quaternion.identity);
+        Rigidbody tileRigidbody = tileObject.GetComponent<Rigidbody>();
+
+        if (tileRigidbody != null)
+        {
+            tileRigidbodies.Add(tileRigidbody);
+            
+        }
+
         spawnZ += tileLength;
-        
     }
 
-   
     private int ChooseRandomTileType()
     {
         float totalWeight = 0;
@@ -72,7 +71,7 @@ public class TileManager : MonoBehaviour
         for (int i = 0; i < tileWeights.Count; i++)
         {
             cumulativeWeight += tileWeights[i];
-            if(randomValue <= cumulativeWeight)
+            if (randomValue <= cumulativeWeight)
             {
                 return i;
             }
@@ -80,19 +79,26 @@ public class TileManager : MonoBehaviour
 
         return tileWeights.Count - 1;
     }
-   
+
+    private void ApplyForceToTiles()
+    {
+        foreach (Rigidbody tileRigidbody in tileRigidbodies)
+        {
+            tileRigidbody.AddForce(Vector3.left * forceMagnitude, ForceMode.Force);
+        }
+    }
+
 
     private void MoveTiles()
     {
-        for (int i = activeTiles.Count - 1; i >= 0; i--)
+        for (int i = tileRigidbodies.Count - 1; i >= 0; i--)
         {
-            GameObject tile = activeTiles[i];
-            tile.transform.Translate(Vector3.left * moveSpeed * Time.deltaTime);
+            Rigidbody tileRigidbody = tileRigidbodies[i];
 
-            if (tile.transform.position.x < deleteThreshold)
+            if (tileRigidbody.transform.position.x < deleteThreshold)
             {
-                Destroy(tile);
-                activeTiles.RemoveAt(i);
+                Destroy(tileRigidbody.gameObject);
+                tileRigidbodies.RemoveAt(i);
             }
         }
     }
