@@ -27,6 +27,21 @@ public class BulletController : MonoBehaviour
             // Access the rigidbody of the new projectile and add force to shoot it
             Rigidbody rb = newProjectile.GetComponent<Rigidbody>();
             rb.AddForce(direction * projectileSpeed, ForceMode.VelocityChange);
+
+            Ray ray = new Ray(transform.position, direction);
+            RaycastHit hit;
+
+            if(Physics.Raycast(ray, out hit))
+            {
+                string hitTag = hit.transform.tag;
+
+                if(hitTag == "Sign")
+                {
+                    Debug.Log("Hit");
+                }
+            }
+
+            Debug.DrawRay(transform.position, direction * 1000f, Color.red);
         }
     }
 }
